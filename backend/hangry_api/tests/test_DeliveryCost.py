@@ -34,4 +34,4 @@ def test_LittleItems():
   #Act
     cost = Delivery.calculate(order,delivery_distance)
   #Assert
-    assert cost == 2.5
+    assert cost == 2.50
