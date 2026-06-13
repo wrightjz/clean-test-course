@@ -1,15 +1,12 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { API_URL } from '../../utils/constants';
 import axios from 'axios';
 import Home from '.';
 
 describe('Test Home', () => {
-  test('Test Render', async () => {
-    //Arrange: Setup the mock API
-    //Listen for any GET requests using the axios module
-    const mockGet = jest.spyOn(axios, 'get');
-    //Intercept the GET requests and provide a mocked response
-    mockGet.mockImplementation((url) => {
+  // Shared mock: intercept axios GET and return a canned category response
+  beforeEach(() => {
+    jest.spyOn(axios, 'get').mockImplementation((url) => {
       switch (url) {
         case `${API_URL}/api/category/?format=json`:
           return Promise.resolve({
@@ -37,14 +34,28 @@ describe('Test Home', () => {
           });
       }
     });
+  });
 
-    //Act: Call the Home page
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  // Functional test: the page renders and shows the category items
+  test('renders the category items', async () => {
     render(<Home />);
 
-    //Assert: Check the values in the rendered Home page.
-    //There should be 2 categories as defined in the mock response above
+    // There should be 2 categories as defined in the mock response
     expect(await screen.findAllByTestId(/category-item/i)).toHaveLength(2);
-    //The word Appeateasers should be in there as defined in the mock response above.
+  });
+
+  // Integration test: data fetched via axios is wired through to the UI
+  test('fetches categories and displays them', async () => {
+    render(<Home />);
+
+    // 'Appeteasers' comes from the mocked GET response
     expect(await screen.findByText('Appeteasers')).toBeInTheDocument();
+    expect(axios.get).toHaveBeenCalledWith(
+      `${API_URL}/api/category/?format=json`
+    );
   });
 });
